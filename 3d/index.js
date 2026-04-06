@@ -7312,10 +7312,32 @@ var PROXY_HOSTS = /* @__PURE__ */ new Set([
   "spaceport-ml-processing.s3.amazonaws.com",
   "spaceport-ml-processing.s3.us-west-2.amazonaws.com"
 ]);
-var DEFAULT_SOGS_BUNDLE_URL = "https://spaceport-ml-processing.s3.amazonaws.com/compressed/edited-splat-20260402-155312/supersplat_bundle/meta.json";
-var DEFAULT_SOGS_SKYBOX_URL = "https://spaceport-ml-processing.s3.amazonaws.com/viewer-assets/skyboxes/whitney-farm-equirect-skybox-20260403-v2.jpg";
+var STAGING_BUNDLE_PREFIX = "/compressed/horsetail-sfwl-hq-skyfix-compress-20260405-011257/supersplat_bundle";
+function getStagingAssetOrigin() {
+  if (typeof window === "undefined") {
+    return "https://spaceport-ml-processing-staging.s3.amazonaws.com";
+  }
+  const h = window.location.hostname;
+  if (h === "localhost" || h === "127.0.0.1") {
+    return `${window.location.origin}/__s3-staging`;
+  }
+  return "https://spaceport-ml-processing-staging.s3.amazonaws.com";
+}
+var DEFAULT_SOGS_BUNDLE_URL = getStagingAssetOrigin() + STAGING_BUNDLE_PREFIX + "/meta.json";
 var DEFAULT_SOGS_SKYBOX_PITCH = 0;
-var DEFAULT_SOGS_SKYBOX_VOFFSET = -0.0646;
+var DEFAULT_SOGS_SKYBOX_VOFFSET = 0;
+function skyboxUrlFromBundleMetaUrl(metaUrl) {
+  try {
+    const u = new URL(metaUrl, getBaseOrigin());
+    if (!u.pathname.toLowerCase().endsWith("meta.json")) {
+      u.pathname = u.pathname.replace(/\/?$/, "/meta.json");
+    }
+    u.pathname = u.pathname.replace(/\/meta\.json$/i, "/background_skybox.webp");
+    return u.toString();
+  } catch {
+    return getStagingAssetOrigin() + STAGING_BUNDLE_PREFIX + "/background_skybox.webp";
+  }
+}
 var MOBILE_BOOT_TIMEOUT_MS = 6e3;
 function shouldUseMobileBootFallback() {
   if (typeof window === "undefined") return false;
@@ -7371,8 +7393,8 @@ function normalizeBundleUrl(rawValue, options = {}) {
 // lib/canyon-vista/canyonVistaConfig.ts
 var CANYON_VISTA_HOLES = [
   {
-    id: "whitney-farm",
-    label: "Whitney Farm",
+    id: "horsetail",
+    label: "Horsetail",
     bundleUrl: DEFAULT_SOGS_BUNDLE_URL
   }
 ];
@@ -8040,8 +8062,8 @@ function CanyonDetailsPanel({ open, onClose }) {
                 children: /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("img", { src: fullscreen ? MINIMIZE_ICON : FULLSCREEN_ICON, alt: "", draggable: false, width: 21, height: 21 })
               }
             ),
-            /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("h1", { id: "canyon-details-heading", children: "Whitney Farm" }),
-            /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("p", { children: "Whitney Farm offers a rare opportunity to own a substantial and self-contained Georgia farm with room to breathe. Encompassing approximately 225± acres of mixed woodland and open pasture, the property is anchored by a well-positioned residence that serves as a natural hub for the land surrounding it." })
+            /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("h1", { id: "canyon-details-heading", children: "Horsetail" }),
+            /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("p", { children: "Interactive SOGS / SuperSplat viewer for the Horsetail compressed bundle." })
           ] })
         }
       )
@@ -14567,7 +14589,7 @@ function SogsMigratedViewer({
     const params = new URLSearchParams({
       settings: viewerSettingsPath,
       content: activeUrl,
-      skybox: DEFAULT_SOGS_SKYBOX_URL,
+      skybox: skyboxUrlFromBundleMetaUrl(activeUrl),
       skyboxPitch: String(DEFAULT_SOGS_SKYBOX_PITCH),
       skyboxVOffset: String(DEFAULT_SOGS_SKYBOX_VOFFSET)
     });
@@ -14940,7 +14962,7 @@ function SogsMigratedViewer({
   );
   const toggleDisabled = viewerState !== "ready";
   return /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("main", { className: "sogs-migrated-root", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("h1", { className: "sogs-migrated-sr-only", children: "Whitney Farm" }),
+    /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("h1", { className: "sogs-migrated-sr-only", children: "Horsetail" }),
     /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { ref: containerRef, className: "sogs-migrated-stage", children: [
       viewerSrc ? /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(
         "iframe",
@@ -15548,6 +15570,6 @@ function SogsMigratedViewer({
 var import_jsx_runtime12 = __toESM(require_jsx_runtime(), 1);
 var mountNode = document.getElementById("root");
 if (!mountNode) {
-  throw new Error("Missing #root mount for Whitney Farm Viewer 2.");
+  throw new Error("Missing #root mount for Horsetail Viewer.");
 }
 (0, import_client.createRoot)(mountNode).render(/* @__PURE__ */ (0, import_jsx_runtime12.jsx)(SogsMigratedViewer, {}));
