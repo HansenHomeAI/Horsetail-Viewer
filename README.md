@@ -25,13 +25,9 @@ The shell defaults to this **meta.json** (same folder as the splat assets):
 
 The iframe loads **`background_skybox.webp` in the same directory** as `meta.json` (see also `background_manifest.json` in that folder).
 
-### Local dev (`npm run dev`)
+### Staging bucket
 
-`localhost` cannot fetch the staging bucket with anonymous CORS in some setups, so the dev server proxies `http://localhost:<port>/__s3-staging/...` → `https://spaceport-ml-processing-staging.s3.amazonaws.com/...`. The shell uses that path automatically on localhost.
-
-### Staging bucket access (important)
-
-If **GET** requests to those HTTPS URLs return XML errors about **KMS** or **Signature Version 4**, the objects are not readable by anonymous browsers yet. Fix **public read** (or **SSE-S3** instead of **SSE-KMS** for these objects), or serve the bundle via **CloudFront** with the right policy. Until then, the renderer cannot load that bundle from the web app.
+The bucket policy allows public **`GetObject`** on `compressed/*`. Bundle objects use **SSE-S3 (AES256)** so browsers can read them without SigV4. **CORS** includes common dev origins (e.g. `http://localhost:5173`) so `npm run dev` can fetch the bundle directly.
 
 Direct object URIs (for tools / AWS CLI):
 

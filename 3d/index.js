@@ -7314,13 +7314,6 @@ var PROXY_HOSTS = /* @__PURE__ */ new Set([
 ]);
 var STAGING_BUNDLE_PREFIX = "/compressed/horsetail-sfwl-hq-skyfix-compress-20260405-011257/supersplat_bundle";
 function getStagingAssetOrigin() {
-  if (typeof window === "undefined") {
-    return "https://spaceport-ml-processing-staging.s3.amazonaws.com";
-  }
-  const h = window.location.hostname;
-  if (h === "localhost" || h === "127.0.0.1") {
-    return `${window.location.origin}/__s3-staging`;
-  }
   return "https://spaceport-ml-processing-staging.s3.amazonaws.com";
 }
 var DEFAULT_SOGS_BUNDLE_URL = getStagingAssetOrigin() + STAGING_BUNDLE_PREFIX + "/meta.json";
