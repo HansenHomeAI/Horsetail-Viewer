@@ -9,7 +9,9 @@ npm install
 npm run dev
 ```
 
-The Vite dev server serves the repo root, and `/` redirects to `/3d/`.
+The Vite dev server serves the repo root on **port 5173** (`--strictPort`), and `/` redirects to `/3d/`.
+
+Developer tools in the shell (splat position/rotation helpers) are **on by default**. Add `?dev=0` to the URL to hide them.
 
 ## Repo structure
 

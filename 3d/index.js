@@ -7300,11 +7300,11 @@ function getSogsDeveloperToolsEnabled() {
   if (typeof window === "undefined") return false;
   try {
     const q = new URLSearchParams(window.location.search).get("dev");
-    if (q === "1" || q === "true") return true;
     if (q === "0" || q === "false") return false;
+    if (q === "1" || q === "true") return true;
   } catch {
   }
-  return false;
+  return true;
 }
 
 // lib/sogsViewerBundle.ts
