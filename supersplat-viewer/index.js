@@ -102365,7 +102365,7 @@ const loadGsplat = async (app, config, progressCallback) => {
     return new Promise((resolve, reject) => {
         asset.on('load', () => {
             const entity = new Entity('gsplat');
-            entity.setLocalEulerAngles(0, 0, 180);
+            entity.setLocalEulerAngles(0, 0, 0);
             entity.addComponent('gsplat', {
                 unified: unified || filename.toLowerCase().endsWith('lod-meta.json'),
                 asset
@@ -102487,5 +102487,5 @@ const main = (app, camera, settingsJson, config) => {
     return viewer;
 };
 
-window.__sogsPc = { Entity, Mesh, MeshInstance, StandardMaterial, Color, CylinderGeometry, Vec3 };
+window.__sogsPc = { Entity, Mesh, MeshInstance, StandardMaterial, Color, CylinderGeometry, Vec3, Quat };
 export { main };

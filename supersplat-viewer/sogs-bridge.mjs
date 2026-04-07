@@ -4,7 +4,7 @@
  */
 import { main } from "./index.js";
 
-const { Color, CylinderGeometry, Entity, Mesh, MeshInstance, StandardMaterial, Vec3 } = window.__sogsPc;
+const { Color, CylinderGeometry, Entity, Mesh, MeshInstance, Quat, StandardMaterial, Vec3 } = window.__sogsPc;
 
 /** Parent-driven camera (position + look-at). When `sogs:cameraMode` is `scripted`, orbit input is skipped. */
 const tmpFrom = new Vec3();
@@ -124,6 +124,16 @@ function postSogsState() {
     const p = g.getLocalPosition();
     const e = g.getLocalEulerAngles();
     const sc = g.getLocalScale();
+    let skyboxRotation = [0, 0, 0];
+    try {
+      const scene = ctx.app.scene;
+      if (scene?.skyboxRotation) {
+        const se = scene.skyboxRotation.getEulerAngles();
+        skyboxRotation = [se.x, se.y, se.z];
+      }
+    } catch {
+      /* ignore */
+    }
     window.parent.postMessage(
       {
         type: "sogs:state",
@@ -131,6 +141,7 @@ function postSogsState() {
         rotation: [e.x, e.y, e.z],
         scale: sc.x,
         fov: ctx.camera.camera.fov,
+        skyboxRotation,
       },
       "*",
     );
@@ -522,6 +533,23 @@ document.addEventListener("DOMContentLoaded", async () => {
             ? d.maxRadiusFromOrigin
             : null;
         app.renderNextFrame = true;
+      }
+      if (d.type === "sogs:skyboxRotation") {
+        try {
+          const scene = app.scene;
+          if (scene && Array.isArray(d.rotation) && d.rotation.length === 3) {
+            const rx = Number(d.rotation[0]);
+            const ry = Number(d.rotation[1]);
+            const rz = Number(d.rotation[2]);
+            if (Number.isFinite(rx) && Number.isFinite(ry) && Number.isFinite(rz)) {
+              scene.skyboxRotation = new Quat().setFromEulerAngles(rx, ry, rz);
+              app.renderNextFrame = true;
+              postSogsState();
+            }
+          }
+        } catch {
+          /* ignore */
+        }
       }
     });
 

@@ -14386,6 +14386,13 @@ function formatSplatStrFromNums(position, rotation, scale) {
     sc: String(roundSplatThousandths(scale))
   };
 }
+function formatSkyboxRotStrFromNums(rotation) {
+  return {
+    srx: String(roundSplatThousandths(rotation[0])),
+    sry: String(roundSplatThousandths(rotation[1])),
+    srz: String(roundSplatThousandths(rotation[2]))
+  };
+}
 function splatNumericFromString(raw) {
   const t = String(raw ?? "").trim();
   if (t === "" || t === "-" || t === "." || t === "-.") return null;
@@ -14473,6 +14480,8 @@ function SogsMigratedViewer({
     );
   });
   const [splatCopyFeedback, setSplatCopyFeedback] = (0, import_react9.useState)(null);
+  const [skyboxRotation, setSkyboxRotation] = (0, import_react9.useState)([0, 0, 0]);
+  const [skyboxRotStr, setSkyboxRotStr] = (0, import_react9.useState)(() => formatSkyboxRotStrFromNums([0, 0, 0]));
   const [showWorldAxes, setShowWorldAxes] = (0, import_react9.useState)(false);
   const [cameraYMin, setCameraYMin] = (0, import_react9.useState)(CANYON_VISTA_CAMERA_WORLD_BOUNDS.yMin);
   const [cameraMaxRadius, setCameraMaxRadius] = (0, import_react9.useState)(CANYON_VISTA_CAMERA_WORLD_BOUNDS.maxRadiusFromOrigin);
@@ -14763,6 +14772,11 @@ function SogsMigratedViewer({
             setSplatScale(ss);
             setSplatStr(formatSplatStrFromNums(sp, sr, ss));
           }
+          if (Array.isArray(st.skyboxRotation) && st.skyboxRotation.length === 3) {
+            const sk = [roundSplatThousandths(st.skyboxRotation[0]), roundSplatThousandths(st.skyboxRotation[1]), roundSplatThousandths(st.skyboxRotation[2])];
+            setSkyboxRotation(sk);
+            setSkyboxRotStr(formatSkyboxRotStrFromNums(sk));
+          }
         }
       }
     };
@@ -14812,6 +14826,22 @@ function SogsMigratedViewer({
     }, 350);
     return () => clearTimeout(id);
   }, [splatStr.px, splatStr.py, splatStr.pz, splatStr.rx, splatStr.ry, splatStr.rz, splatStr.sc, splatPosition, splatRotation, splatScale, viewerState, splatAlignOpen]);
+  (0, import_react9.useEffect)(() => {
+    if (viewerState !== "ready" || !splatAlignOpen) return;
+    const win = iframeRef.current?.contentWindow;
+    if (!win) return;
+    const id = window.setTimeout(() => {
+      postToWindow(win, {
+        type: "sogs:skyboxRotation",
+        rotation: [
+          splatNumericFromString(skyboxRotStr.srx) ?? skyboxRotation[0],
+          splatNumericFromString(skyboxRotStr.sry) ?? skyboxRotation[1],
+          splatNumericFromString(skyboxRotStr.srz) ?? skyboxRotation[2]
+        ]
+      });
+    }, 350);
+    return () => clearTimeout(id);
+  }, [skyboxRotStr.srx, skyboxRotStr.sry, skyboxRotStr.srz, skyboxRotation, viewerState, splatAlignOpen]);
   (0, import_react9.useEffect)(() => {
     if (viewerState !== "ready" || !iframeRef.current) return;
     let raf = 0;
@@ -15241,7 +15271,7 @@ function SogsMigratedViewer({
             /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("div", { className: "lot-editor-title", children: "Splat align" }),
             /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("button", { type: "button", className: "animation-editor-close", "aria-label": "Close", onClick: () => setSplatAlignOpen(false), children: "\xD7" })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("div", { className: "lot-editor-status animation-editor-status-compact", children: toggleDisabled ? "Loading\u2026" : "Values apply to the viewer as you edit. Copy includes scene pose, camera bounds, and world axes." }),
+          /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("div", { className: "lot-editor-status animation-editor-status-compact", children: toggleDisabled ? "Loading\u2026" : "Values apply to the viewer as you edit. Copy includes scene pose, skybox rotation, camera bounds, and world axes." }),
           /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "animation-path-toggles-row", children: [
             /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("label", { className: "animation-path-inline-label", children: [
               /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(
@@ -15468,6 +15498,82 @@ function SogsMigratedViewer({
                   }
                 }
               )
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("div", { className: "lot-editor-field splat-align-skybox-heading", children: /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { children: "Skybox rotation (\xB0, world / equirect)" }) }),
+            /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "lot-editor-field", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("label", { htmlFor: "skybox-rx", children: "Skybox X" }),
+              /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(
+                "input",
+                {
+                  id: "skybox-rx",
+                  type: "text",
+                  inputMode: "decimal",
+                  disabled: toggleDisabled,
+                  value: skyboxRotStr.srx,
+                  onChange: (e) => {
+                    const raw = e.target.value;
+                    setSkyboxRotStr((s) => ({ ...s, srx: raw }));
+                    const n = splatNumericFromString(raw);
+                    if (n !== null) setSkyboxRotation((r) => [n, r[1], r[2]]);
+                  },
+                  onBlur: (e) => {
+                    const raw = e.target.value;
+                    const c = commitSplatAxisString(raw, skyboxRotation[0]);
+                    setSkyboxRotation((r) => [c, r[1], r[2]]);
+                    setSkyboxRotStr((s) => ({ ...s, srx: String(c) }));
+                  }
+                }
+              )
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "lot-editor-field", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("label", { htmlFor: "skybox-ry", children: "Skybox Y" }),
+              /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(
+                "input",
+                {
+                  id: "skybox-ry",
+                  type: "text",
+                  inputMode: "decimal",
+                  disabled: toggleDisabled,
+                  value: skyboxRotStr.sry,
+                  onChange: (e) => {
+                    const raw = e.target.value;
+                    setSkyboxRotStr((s) => ({ ...s, sry: raw }));
+                    const n = splatNumericFromString(raw);
+                    if (n !== null) setSkyboxRotation((r) => [r[0], n, r[2]]);
+                  },
+                  onBlur: (e) => {
+                    const raw = e.target.value;
+                    const c = commitSplatAxisString(raw, skyboxRotation[1]);
+                    setSkyboxRotation((r) => [r[0], c, r[2]]);
+                    setSkyboxRotStr((s) => ({ ...s, sry: String(c) }));
+                  }
+                }
+              )
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "lot-editor-field", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("label", { htmlFor: "skybox-rz", children: "Skybox Z" }),
+              /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(
+                "input",
+                {
+                  id: "skybox-rz",
+                  type: "text",
+                  inputMode: "decimal",
+                  disabled: toggleDisabled,
+                  value: skyboxRotStr.srz,
+                  onChange: (e) => {
+                    const raw = e.target.value;
+                    setSkyboxRotStr((s) => ({ ...s, srz: raw }));
+                    const n = splatNumericFromString(raw);
+                    if (n !== null) setSkyboxRotation((r) => [r[0], r[1], n]);
+                  },
+                  onBlur: (e) => {
+                    const raw = e.target.value;
+                    const c = commitSplatAxisString(raw, skyboxRotation[2]);
+                    setSkyboxRotation((r) => [r[0], r[1], c]);
+                    setSkyboxRotStr((s) => ({ ...s, srz: String(c) }));
+                  }
+                }
+              )
             ] })
           ] }),
           /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: "animation-editor-actions splat-align-actions", children: [
@@ -15484,6 +15590,11 @@ function SogsMigratedViewer({
                     rotation: [roundSplatThousandths(splatRotation[0]), roundSplatThousandths(splatRotation[1]), roundSplatThousandths(splatRotation[2])],
                     scale: roundSplatThousandths(splatScale),
                     fov,
+                    skyboxRotation: [
+                      roundSplatThousandths(splatNumericFromString(skyboxRotStr.srx) ?? skyboxRotation[0]),
+                      roundSplatThousandths(splatNumericFromString(skyboxRotStr.sry) ?? skyboxRotation[1]),
+                      roundSplatThousandths(splatNumericFromString(skyboxRotStr.srz) ?? skyboxRotation[2])
+                    ],
                     worldAxes: showWorldAxes,
                     cameraBounds: {
                       yMin: roundSplatThousandths(cameraYMin),
@@ -15520,6 +15631,9 @@ function SogsMigratedViewer({
                   setSplatRotation(rot);
                   setSplatScale(sc);
                   setSplatStr(formatSplatStrFromNums(pos, rot, sc));
+                  const sky0 = [0, 0, 0];
+                  setSkyboxRotation(sky0);
+                  setSkyboxRotStr(formatSkyboxRotStrFromNums(sky0));
                   ignoreNextSogsStateRef.current = true;
                   postToWindow(iframeRef.current?.contentWindow, {
                     type: "sogs:apply",
@@ -15527,6 +15641,10 @@ function SogsMigratedViewer({
                     rotation: rot,
                     scale: sc,
                     fov: d.fov
+                  });
+                  postToWindow(iframeRef.current?.contentWindow, {
+                    type: "sogs:skyboxRotation",
+                    rotation: sky0
                   });
                 },
                 children: "Reset defaults"
