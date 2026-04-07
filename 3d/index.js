@@ -7312,7 +7312,7 @@ var PROXY_HOSTS = /* @__PURE__ */ new Set([
   "spaceport-ml-processing.s3.amazonaws.com",
   "spaceport-ml-processing.s3.us-west-2.amazonaws.com"
 ]);
-var STAGING_BUNDLE_PREFIX = "/compressed/brass-lantern-sfwl-hq-compress-20260407-054616/supersplat_bundle";
+var STAGING_BUNDLE_PREFIX = "/compressed/horsetail-sfwl-hq-skyfix-compress-20260405-011257/supersplat_bundle";
 function getStagingAssetOrigin() {
   return "https://spaceport-ml-processing-staging.s3.amazonaws.com";
 }

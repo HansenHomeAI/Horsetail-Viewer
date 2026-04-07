@@ -23,7 +23,7 @@ Developer tools in the shell (splat position/rotation helpers) are **on by defau
 
 The shell defaults to this **meta.json** (same folder as the splat assets):
 
-`https://spaceport-ml-processing-staging.s3.amazonaws.com/compressed/brass-lantern-sfwl-hq-compress-20260407-054616/supersplat_bundle/meta.json`
+`https://spaceport-ml-processing-staging.s3.amazonaws.com/compressed/horsetail-sfwl-hq-skyfix-compress-20260405-011257/supersplat_bundle/meta.json`
 
 The iframe loads **`background_skybox.webp` in the same directory** as `meta.json` (see also `background_manifest.json` in that folder).
 
@@ -33,6 +33,6 @@ The bucket policy allows public **`GetObject`** on `compressed/*`. Bundle object
 
 Direct object URIs (for tools / AWS CLI):
 
-- `s3://spaceport-ml-processing-staging/compressed/brass-lantern-sfwl-hq-compress-20260407-054616/supersplat_bundle/meta.json`
-- `s3://spaceport-ml-processing-staging/compressed/brass-lantern-sfwl-hq-compress-20260407-054616/supersplat_bundle/background_skybox.webp`
-- `s3://spaceport-ml-processing-staging/compressed/brass-lantern-sfwl-hq-compress-20260407-054616/supersplat_bundle/background_manifest.json`
+- `s3://spaceport-ml-processing-staging/compressed/horsetail-sfwl-hq-skyfix-compress-20260405-011257/supersplat_bundle/meta.json`
+- `s3://spaceport-ml-processing-staging/compressed/horsetail-sfwl-hq-skyfix-compress-20260405-011257/supersplat_bundle/background_skybox.webp`
+- `s3://spaceport-ml-processing-staging/compressed/horsetail-sfwl-hq-skyfix-compress-20260405-011257/supersplat_bundle/background_manifest.json`
