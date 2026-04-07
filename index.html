@@ -11,7 +11,9 @@
     <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
     <script>
       const target = new URL("./3d/", window.location.href);
-      target.search = window.location.search;
+      const params = new URLSearchParams(window.location.search);
+      if (!params.has("dev")) params.set("dev", "1");
+      target.search = params.toString();
       target.hash = window.location.hash;
       window.location.replace(target.toString());
     </script>
