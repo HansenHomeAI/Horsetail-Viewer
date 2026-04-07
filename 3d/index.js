@@ -7288,6 +7288,9 @@ var SOGS_DEFAULT_SCENE = {
   scale: 1,
   fov: 60
 };
+/** Default scene skybox Euler ° (PlayCanvas `scene.skyboxRotation`), applied on first frame. */
+var SOGS_DEFAULT_SKYBOX_ROTATION = [90, 0, 0];
+var SOGS_DEFAULT_WORLD_AXES = true;
 function createDefaultScenePayload() {
   return {
     position: [...SOGS_DEFAULT_SCENE.position],
@@ -14480,16 +14483,16 @@ function SogsMigratedViewer({
     );
   });
   const [splatCopyFeedback, setSplatCopyFeedback] = (0, import_react9.useState)(null);
-  const [skyboxRotation, setSkyboxRotation] = (0, import_react9.useState)([0, 0, 0]);
-  const [skyboxRotStr, setSkyboxRotStr] = (0, import_react9.useState)(() => formatSkyboxRotStrFromNums([0, 0, 0]));
-  const [showWorldAxes, setShowWorldAxes] = (0, import_react9.useState)(false);
+  const [skyboxRotation, setSkyboxRotation] = (0, import_react9.useState)([...SOGS_DEFAULT_SKYBOX_ROTATION]);
+  const [skyboxRotStr, setSkyboxRotStr] = (0, import_react9.useState)(() => formatSkyboxRotStrFromNums([...SOGS_DEFAULT_SKYBOX_ROTATION]));
+  const [showWorldAxes, setShowWorldAxes] = (0, import_react9.useState)(SOGS_DEFAULT_WORLD_AXES);
   const [cameraYMin, setCameraYMin] = (0, import_react9.useState)(CANYON_VISTA_CAMERA_WORLD_BOUNDS.yMin);
   const [cameraMaxRadius, setCameraMaxRadius] = (0, import_react9.useState)(CANYON_VISTA_CAMERA_WORLD_BOUNDS.maxRadiusFromOrigin);
   const cameraBoundsRef = (0, import_react9.useRef)({
     yMin: CANYON_VISTA_CAMERA_WORLD_BOUNDS.yMin,
     maxR: CANYON_VISTA_CAMERA_WORLD_BOUNDS.maxRadiusFromOrigin
   });
-  const showWorldAxesRef = (0, import_react9.useRef)(false);
+  const showWorldAxesRef = (0, import_react9.useRef)(SOGS_DEFAULT_WORLD_AXES);
   (0, import_react9.useEffect)(() => {
     cameraBoundsRef.current = { yMin: cameraYMin, maxR: cameraMaxRadius };
   }, [cameraYMin, cameraMaxRadius]);
@@ -14676,6 +14679,13 @@ function SogsMigratedViewer({
             "*"
           );
           event.source.postMessage({ type: "sogs:worldGuides", enabled: showWorldAxesRef.current }, "*");
+          event.source.postMessage(
+            {
+              type: "sogs:skyboxRotation",
+              rotation: [SOGS_DEFAULT_SKYBOX_ROTATION[0], SOGS_DEFAULT_SKYBOX_ROTATION[1], SOGS_DEFAULT_SKYBOX_ROTATION[2]]
+            },
+            "*"
+          );
         } catch {
         }
         poseRef.current = {
@@ -14692,6 +14702,8 @@ function SogsMigratedViewer({
         setSplatRotation(sr);
         setSplatScale(ss);
         setSplatStr(formatSplatStrFromNums(sp, sr, ss));
+        setSkyboxRotation([...SOGS_DEFAULT_SKYBOX_ROTATION]);
+        setSkyboxRotStr(formatSkyboxRotStrFromNums([...SOGS_DEFAULT_SKYBOX_ROTATION]));
         setViewerState("ready");
       }
       if (event.data?.type === "supersplat:bootError" && event.source === iframeRef.current?.contentWindow) {
@@ -15631,9 +15643,10 @@ function SogsMigratedViewer({
                   setSplatRotation(rot);
                   setSplatScale(sc);
                   setSplatStr(formatSplatStrFromNums(pos, rot, sc));
-                  const sky0 = [0, 0, 0];
-                  setSkyboxRotation(sky0);
-                  setSkyboxRotStr(formatSkyboxRotStrFromNums(sky0));
+                  const skyD = [...SOGS_DEFAULT_SKYBOX_ROTATION];
+                  setSkyboxRotation(skyD);
+                  setSkyboxRotStr(formatSkyboxRotStrFromNums(skyD));
+                  setShowWorldAxes(SOGS_DEFAULT_WORLD_AXES);
                   ignoreNextSogsStateRef.current = true;
                   postToWindow(iframeRef.current?.contentWindow, {
                     type: "sogs:apply",
@@ -15644,7 +15657,11 @@ function SogsMigratedViewer({
                   });
                   postToWindow(iframeRef.current?.contentWindow, {
                     type: "sogs:skyboxRotation",
-                    rotation: sky0
+                    rotation: skyD
+                  });
+                  postToWindow(iframeRef.current?.contentWindow, {
+                    type: "sogs:worldGuides",
+                    enabled: SOGS_DEFAULT_WORLD_AXES
                   });
                 },
                 children: "Reset defaults"
