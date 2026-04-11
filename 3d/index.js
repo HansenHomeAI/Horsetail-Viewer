@@ -14421,6 +14421,105 @@ function commitSplatScaleString(raw, fallback) {
   }
   return roundSplatThousandths(v);
 }
+var SPLAT_ALIGN_WHEEL_STEPS = {
+  "splat-px": 0.05,
+  "splat-py": 0.05,
+  "splat-pz": 0.05,
+  "splat-rx": 2,
+  "splat-ry": 2,
+  "splat-rz": 2,
+  "splat-sc": 0.05,
+  "skybox-rx": 2,
+  "skybox-ry": 2,
+  "skybox-rz": 2
+};
+function splatWheelAxisDirection(e) {
+  const dy = e.deltaY;
+  const dx = e.deltaX;
+  if (Math.abs(dy) >= Math.abs(dx)) {
+    return -Math.sign(dy);
+  }
+  return -Math.sign(dx);
+}
+function applySplatAlignWheelById(id, dir, s) {
+  if (!dir || s.toggleDisabled) return;
+  const step = SPLAT_ALIGN_WHEEL_STEPS[id];
+  if (step == null) return;
+  switch (id) {
+    case "splat-px": {
+      const cur = splatNumericFromString(s.splatStr.px) ?? s.splatPosition[0];
+      const next = roundSplatThousandths(cur + dir * step);
+      s.setSplatPosition((p) => [next, p[1], p[2]]);
+      s.setSplatStr((st) => ({ ...st, px: String(next) }));
+      break;
+    }
+    case "splat-py": {
+      const cur = splatNumericFromString(s.splatStr.py) ?? s.splatPosition[1];
+      const next = roundSplatThousandths(cur + dir * step);
+      s.setSplatPosition((p) => [p[0], next, p[2]]);
+      s.setSplatStr((st) => ({ ...st, py: String(next) }));
+      break;
+    }
+    case "splat-pz": {
+      const cur = splatNumericFromString(s.splatStr.pz) ?? s.splatPosition[2];
+      const next = roundSplatThousandths(cur + dir * step);
+      s.setSplatPosition((p) => [p[0], p[1], next]);
+      s.setSplatStr((st) => ({ ...st, pz: String(next) }));
+      break;
+    }
+    case "splat-rx": {
+      const cur = splatNumericFromString(s.splatStr.rx) ?? s.splatRotation[0];
+      const next = roundSplatThousandths(cur + dir * step);
+      s.setSplatRotation((r) => [next, r[1], r[2]]);
+      s.setSplatStr((st) => ({ ...st, rx: String(next) }));
+      break;
+    }
+    case "splat-ry": {
+      const cur = splatNumericFromString(s.splatStr.ry) ?? s.splatRotation[1];
+      const next = roundSplatThousandths(cur + dir * step);
+      s.setSplatRotation((r) => [r[0], next, r[2]]);
+      s.setSplatStr((st) => ({ ...st, ry: String(next) }));
+      break;
+    }
+    case "splat-rz": {
+      const cur = splatNumericFromString(s.splatStr.rz) ?? s.splatRotation[2];
+      const next = roundSplatThousandths(cur + dir * step);
+      s.setSplatRotation((r) => [r[0], r[1], next]);
+      s.setSplatStr((st) => ({ ...st, rz: String(next) }));
+      break;
+    }
+    case "splat-sc": {
+      const cur = splatNumericFromString(s.splatStr.sc) ?? s.splatScale;
+      let next = roundSplatThousandths(cur + dir * step);
+      if (next <= 0) next = 0.001;
+      s.setSplatScale(next);
+      s.setSplatStr((st) => ({ ...st, sc: String(next) }));
+      break;
+    }
+    case "skybox-rx": {
+      const cur = splatNumericFromString(s.skyboxRotStr.srx) ?? s.skyboxRotation[0];
+      const next = roundSplatThousandths(cur + dir * step);
+      s.setSkyboxRotation((r) => [next, r[1], r[2]]);
+      s.setSkyboxRotStr((st) => ({ ...st, srx: String(next) }));
+      break;
+    }
+    case "skybox-ry": {
+      const cur = splatNumericFromString(s.skyboxRotStr.sry) ?? s.skyboxRotation[1];
+      const next = roundSplatThousandths(cur + dir * step);
+      s.setSkyboxRotation((r) => [r[0], next, r[2]]);
+      s.setSkyboxRotStr((st) => ({ ...st, sry: String(next) }));
+      break;
+    }
+    case "skybox-rz": {
+      const cur = splatNumericFromString(s.skyboxRotStr.srz) ?? s.skyboxRotation[2];
+      const next = roundSplatThousandths(cur + dir * step);
+      s.setSkyboxRotation((r) => [r[0], r[1], next]);
+      s.setSkyboxRotStr((st) => ({ ...st, srz: String(next) }));
+      break;
+    }
+    default:
+  }
+}
 function SogsMigratedViewer({
   useBundleProxy = false,
   viewerBase = DEFAULT_VIEWER_BASE,
@@ -14429,6 +14528,9 @@ function SogsMigratedViewer({
   const iframeRef = (0, import_react9.useRef)(null);
   const containerRef = (0, import_react9.useRef)(null);
   const ignoreNextSogsStateRef = (0, import_react9.useRef)(false);
+  const splatAlignOpenRef = (0, import_react9.useRef)(false);
+  const splatAlignOpenSyncRef = (0, import_react9.useRef)(0);
+  const prevSplatAlignOpenRef = (0, import_react9.useRef)(false);
   const pathStateRef = (0, import_react9.useRef)(
     createInitialPathState({
       checkpoints: CANYON_VISTA_DEFAULT_PATH_CHECKPOINTS.map((c) => ({
@@ -14499,6 +14601,13 @@ function SogsMigratedViewer({
   (0, import_react9.useEffect)(() => {
     showWorldAxesRef.current = showWorldAxes;
   }, [showWorldAxes]);
+  (0, import_react9.useLayoutEffect)(() => {
+    if (splatAlignOpen && !prevSplatAlignOpenRef.current) {
+      splatAlignOpenSyncRef.current = 1;
+    }
+    prevSplatAlignOpenRef.current = splatAlignOpen;
+    splatAlignOpenRef.current = splatAlignOpen;
+  }, [splatAlignOpen]);
   const [detailsOpen, setDetailsOpen] = (0, import_react9.useState)(false);
   const [revealDone, setRevealDone] = (0, import_react9.useState)(false);
   const introPathPlayedRef = (0, import_react9.useRef)(false);
@@ -14771,23 +14880,32 @@ function SogsMigratedViewer({
         };
       }
       if (event.data?.type === "sogs:state" && event.source === iframeRef.current?.contentWindow) {
-        if (ignoreNextSogsStateRef.current) {
-          ignoreNextSogsStateRef.current = false;
-        } else {
-          const st = event.data;
-          if (Array.isArray(st.position) && st.position.length === 3 && Array.isArray(st.rotation) && st.rotation.length === 3 && typeof st.scale === "number" && Number.isFinite(st.scale)) {
-            const sp = [roundSplatThousandths(st.position[0]), roundSplatThousandths(st.position[1]), roundSplatThousandths(st.position[2])];
-            const sr = [roundSplatThousandths(st.rotation[0]), roundSplatThousandths(st.rotation[1]), roundSplatThousandths(st.rotation[2])];
-            const ss = roundSplatThousandths(st.scale);
-            setSplatPosition(sp);
-            setSplatRotation(sr);
-            setSplatScale(ss);
-            setSplatStr(formatSplatStrFromNums(sp, sr, ss));
-          }
-          if (Array.isArray(st.skyboxRotation) && st.skyboxRotation.length === 3) {
-            const sk = [roundSplatThousandths(st.skyboxRotation[0]), roundSplatThousandths(st.skyboxRotation[1]), roundSplatThousandths(st.skyboxRotation[2])];
-            setSkyboxRotation(sk);
-            setSkyboxRotStr(formatSkyboxRotStrFromNums(sk));
+        const st = event.data;
+        let skipDueToIgnore = ignoreNextSogsStateRef.current;
+        if (skipDueToIgnore) ignoreNextSogsStateRef.current = false;
+        if (skipDueToIgnore && splatAlignOpenRef.current && splatAlignOpenSyncRef.current > 0) {
+          skipDueToIgnore = false;
+        }
+        if (!skipDueToIgnore) {
+          const allowSplatSkybox = !splatAlignOpenRef.current || splatAlignOpenSyncRef.current > 0;
+          if (allowSplatSkybox) {
+            if (splatAlignOpenRef.current && splatAlignOpenSyncRef.current > 0) {
+              splatAlignOpenSyncRef.current--;
+            }
+            if (Array.isArray(st.position) && st.position.length === 3 && Array.isArray(st.rotation) && st.rotation.length === 3 && typeof st.scale === "number" && Number.isFinite(st.scale)) {
+              const sp = [roundSplatThousandths(st.position[0]), roundSplatThousandths(st.position[1]), roundSplatThousandths(st.position[2])];
+              const sr = [roundSplatThousandths(st.rotation[0]), roundSplatThousandths(st.rotation[1]), roundSplatThousandths(st.rotation[2])];
+              const ss = roundSplatThousandths(st.scale);
+              setSplatPosition(sp);
+              setSplatRotation(sr);
+              setSplatScale(ss);
+              setSplatStr(formatSplatStrFromNums(sp, sr, ss));
+            }
+            if (Array.isArray(st.skyboxRotation) && st.skyboxRotation.length === 3) {
+              const sk = [roundSplatThousandths(st.skyboxRotation[0]), roundSplatThousandths(st.skyboxRotation[1]), roundSplatThousandths(st.skyboxRotation[2])];
+              setSkyboxRotation(sk);
+              setSkyboxRotStr(formatSkyboxRotStrFromNums(sk));
+            }
           }
         }
       }
@@ -14996,6 +15114,43 @@ function SogsMigratedViewer({
     [bumpPath]
   );
   const toggleDisabled = viewerState !== "ready";
+  const splatWheelStateRef = (0, import_react9.useRef)(null);
+  splatWheelStateRef.current = {
+    toggleDisabled,
+    splatPosition,
+    splatStr,
+    splatRotation,
+    splatScale,
+    skyboxRotation,
+    skyboxRotStr,
+    setSplatPosition,
+    setSplatStr,
+    setSplatRotation,
+    setSplatScale,
+    setSkyboxRotation,
+    setSkyboxRotStr
+  };
+  (0, import_react9.useEffect)(() => {
+    if (!developerToolsEnabled) return;
+    const panel = document.getElementById("splatAlignPanel");
+    if (!panel) return;
+    const onWheel = (e) => {
+      const el = document.activeElement;
+      if (!(el instanceof HTMLInputElement) || el.type !== "number") return;
+      if (!panel.contains(el)) return;
+      const id = el.id;
+      if (SPLAT_ALIGN_WHEEL_STEPS[id] == null) return;
+      const dir = splatWheelAxisDirection(e);
+      if (dir === 0) return;
+      const st = splatWheelStateRef.current;
+      if (st.toggleDisabled) return;
+      e.preventDefault();
+      e.stopPropagation();
+      applySplatAlignWheelById(id, dir, st);
+    };
+    panel.addEventListener("wheel", onWheel, { passive: false, capture: true });
+    return () => panel.removeEventListener("wheel", onWheel, { capture: true });
+  }, [developerToolsEnabled]);
   return /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("main", { className: "sogs-migrated-root", children: [
     /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("h1", { className: "sogs-migrated-sr-only", children: "Horsetail" }),
     /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { ref: containerRef, className: "sogs-migrated-stage", children: [
@@ -15305,7 +15460,7 @@ function SogsMigratedViewer({
                 "input",
                 {
                   type: "number",
-                  step: "0.001",
+                  step: "1",
                   disabled: toggleDisabled,
                   value: cameraYMin,
                   onChange: (e) => {
@@ -15323,7 +15478,7 @@ function SogsMigratedViewer({
                 {
                   type: "number",
                   min: "0.001",
-                  step: "0.001",
+                  step: "1",
                   disabled: toggleDisabled,
                   value: cameraMaxRadius,
                   onChange: (e) => {
@@ -15342,8 +15497,8 @@ function SogsMigratedViewer({
                 "input",
                 {
                   id: "splat-px",
-                  type: "text",
-                  inputMode: "decimal",
+                  type: "number",
+                  step: "0.05",
                   disabled: toggleDisabled,
                   value: splatStr.px,
                   onChange: (e) => {
@@ -15367,8 +15522,8 @@ function SogsMigratedViewer({
                 "input",
                 {
                   id: "splat-py",
-                  type: "text",
-                  inputMode: "decimal",
+                  type: "number",
+                  step: "0.05",
                   disabled: toggleDisabled,
                   value: splatStr.py,
                   onChange: (e) => {
@@ -15392,8 +15547,8 @@ function SogsMigratedViewer({
                 "input",
                 {
                   id: "splat-pz",
-                  type: "text",
-                  inputMode: "decimal",
+                  type: "number",
+                  step: "0.05",
                   disabled: toggleDisabled,
                   value: splatStr.pz,
                   onChange: (e) => {
@@ -15417,8 +15572,8 @@ function SogsMigratedViewer({
                 "input",
                 {
                   id: "splat-rx",
-                  type: "text",
-                  inputMode: "decimal",
+                  type: "number",
+                  step: "1",
                   disabled: toggleDisabled,
                   value: splatStr.rx,
                   onChange: (e) => {
@@ -15442,8 +15597,8 @@ function SogsMigratedViewer({
                 "input",
                 {
                   id: "splat-ry",
-                  type: "text",
-                  inputMode: "decimal",
+                  type: "number",
+                  step: "1",
                   disabled: toggleDisabled,
                   value: splatStr.ry,
                   onChange: (e) => {
@@ -15467,8 +15622,8 @@ function SogsMigratedViewer({
                 "input",
                 {
                   id: "splat-rz",
-                  type: "text",
-                  inputMode: "decimal",
+                  type: "number",
+                  step: "1",
                   disabled: toggleDisabled,
                   value: splatStr.rz,
                   onChange: (e) => {
@@ -15492,8 +15647,9 @@ function SogsMigratedViewer({
                 "input",
                 {
                   id: "splat-sc",
-                  type: "text",
-                  inputMode: "decimal",
+                  type: "number",
+                  min: "0.001",
+                  step: "0.05",
                   disabled: toggleDisabled,
                   value: splatStr.sc,
                   onChange: (e) => {
@@ -15518,8 +15674,8 @@ function SogsMigratedViewer({
                 "input",
                 {
                   id: "skybox-rx",
-                  type: "text",
-                  inputMode: "decimal",
+                  type: "number",
+                  step: "1",
                   disabled: toggleDisabled,
                   value: skyboxRotStr.srx,
                   onChange: (e) => {
@@ -15543,8 +15699,8 @@ function SogsMigratedViewer({
                 "input",
                 {
                   id: "skybox-ry",
-                  type: "text",
-                  inputMode: "decimal",
+                  type: "number",
+                  step: "1",
                   disabled: toggleDisabled,
                   value: skyboxRotStr.sry,
                   onChange: (e) => {
@@ -15568,8 +15724,8 @@ function SogsMigratedViewer({
                 "input",
                 {
                   id: "skybox-rz",
-                  type: "text",
-                  inputMode: "decimal",
+                  type: "number",
+                  step: "1",
                   disabled: toggleDisabled,
                   value: skyboxRotStr.srz,
                   onChange: (e) => {
