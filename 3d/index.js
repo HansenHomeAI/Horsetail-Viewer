@@ -7313,11 +7313,13 @@ function getSogsDeveloperToolsEnabled() {
 // lib/sogsViewerBundle.ts
 var PROXY_HOSTS = /* @__PURE__ */ new Set([
   "spaceport-ml-processing.s3.amazonaws.com",
-  "spaceport-ml-processing.s3.us-west-2.amazonaws.com"
+  "spaceport-ml-processing.s3.us-west-2.amazonaws.com",
+  "spaceport-ml-processing-staging.s3.amazonaws.com",
+  "spaceport-ml-processing-staging.s3.us-west-2.amazonaws.com"
 ]);
-var STAGING_BUNDLE_PREFIX = "/compressed/horsetail-brassmatch-compress-20260410-022221-public/supersplat_bundle";
+var STAGING_BUNDLE_PREFIX = "/manual-validations/brassfull-direct-splat-transform-vk-1776001505/supersplat_bundle";
 function getStagingAssetOrigin() {
-  return "https://spaceport-ml-processing-staging.s3.amazonaws.com";
+  return "https://spaceport-ml-processing-staging.s3.us-west-2.amazonaws.com";
 }
 var DEFAULT_SOGS_BUNDLE_URL = getStagingAssetOrigin() + STAGING_BUNDLE_PREFIX + "/meta.json";
 var DEFAULT_SOGS_SKYBOX_PITCH = 0;
@@ -15856,4 +15858,7 @@ var mountNode = document.getElementById("root");
 if (!mountNode) {
   throw new Error("Missing #root mount for Horsetail Viewer.");
 }
-(0, import_client.createRoot)(mountNode).render(/* @__PURE__ */ (0, import_jsx_runtime12.jsx)(SogsMigratedViewer, {}));
+var useLocalSogsProxy = typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+(0, import_client.createRoot)(mountNode).render(
+  /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(SogsMigratedViewer, { useBundleProxy: useLocalSogsProxy })
+);
