@@ -15858,7 +15858,7 @@ var mountNode = document.getElementById("root");
 if (!mountNode) {
   throw new Error("Missing #root mount for Horsetail Viewer.");
 }
-var useLocalSogsProxy = typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+var useLocalSogsProxy = typeof window !== "undefined" && (window.location.port === "5173" || window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
 (0, import_client.createRoot)(mountNode).render(
   /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(SogsMigratedViewer, { useBundleProxy: useLocalSogsProxy })
 );
